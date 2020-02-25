@@ -1,0 +1,3 @@
+httpimport
+requests
+jupyter
