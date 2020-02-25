@@ -11,7 +11,7 @@ class Client:
         self.workerid = workerid
         self.threads = []
 
-    def __fetch_and_lock(self, endpoint, task, callback):
+    def __fetch_and_lock(self, endpoint, task, callback, interval=300):
         body = '[]'
 
         try:
@@ -26,11 +26,11 @@ class Client:
                     else:
                         break
                 else:
-                    time.sleep(5)
+                    time.sleep(interval/1000)
         except:
             print("Engine is down")
 
-    def subscribe(self, topic, callback, tenantId=None, lockDuration=1000, longPolling=5000):
+    def subscribe(self, topic, callback, tenantId=None, lockDuration=20000, longPolling=29000):
         # Define the endpoint for fetch and lock
         endpoint = str(self.url) + "/external-task/fetchAndLock"
 
@@ -153,27 +153,5 @@ class Client:
             fail = requests.post(endpoint, json=response)
             print(fail.status_code)
 
-        except:
-            print('fail')
-
-    # New Lockduration           
-    def new_lockduration(self, new_duration, response_body):
-        taskid = response_body[0]['id']
-        taskid = str(taskid)
-
-        endpoint = str(self.url) + "/external-task/" + taskid + "/extendLock"
-
-        workerid = response_body[0]['workerId']
-        workerid = str(workerid)
-
-        response = {
-            "workerId": workerid,
-            "newDuration": new_duration
-        }
-
-        try:
-            newDuration = requests.post(endpoint, json=response)
-            print(newDuration.status_code)
-            print(workerid)
         except:
             print('fail')
