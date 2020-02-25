@@ -4,11 +4,12 @@ import time
 import threading
 import uuid
 
-class client:
+
+class Client:
     def __init__(self, url, workerid=None):
         self.url = url
         self.workerid = workerid
-        self.threads=[]
+        self.threads = []
 
     def __fetch_and_lock(self, endpoint, task, callback):
         body = '[]'
@@ -32,7 +33,7 @@ class client:
     def subscribe(self, topic, callback, tenantId=None, lockDuration=1000, longPolling=5000):
         # Define the endpoint for fetch and lock
         endpoint = str(self.url) + "/external-task/fetchAndLock"
-        
+
         # Define unique ID for the worker, if undifiend
         if self.workerid:
             workerid = str(self.workerid)
@@ -65,7 +66,7 @@ class client:
                           }]
                     }
 
-        self.threads.append(threading.Thread(target=self.__fetch_and_lock, args=(endpoint, task, callback, )))
+        self.threads.append(threading.Thread(target=self.__fetch_and_lock, args=(endpoint, task, callback,)))
 
     def polling(self):
         for thread in self.threads:
