@@ -11,5 +11,5 @@ def welcome():
 
 
 if __name__ == '__main__':
-    t = threading.Thread(target=SurpriseMenuClient).start()
+    threading.Thread(target=SurpriseMenuClient).start()
     app.run()
