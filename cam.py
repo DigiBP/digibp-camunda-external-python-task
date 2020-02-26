@@ -21,12 +21,10 @@ class Client:
                 print(fetch_and_lock.status_code)
                 body = fetch_and_lock.text
                 if body != '[]':
-                    if callback:
-                        callback(json.loads(body))
-                    else:
-                        break
+                    callback(json.loads(body))
                 else:
-                    time.sleep(interval/1000)
+                    time.sleep(interval / 1000)
+
         except:
             print("Engine is down")
 
@@ -71,8 +69,8 @@ class Client:
     def polling(self):
         for thread in self.threads:
             thread.start()
-        while True:
-            pass
+        for thread in self.threads:
+            thread.join()
 
     # Complete Call
     def complete(self, response_body, **kwargs):

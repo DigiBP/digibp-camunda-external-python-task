@@ -1,0 +1,7 @@
+{
+  "name": "Camunda External Python Task",
+  "description": "Camunda External Python Task",
+  "image": "heroku/python",
+  "repository": "https://github.com/DigiBP/digibp-camunda-external-python-task",
+  "keywords": ["python", "camunda" ]
+}
