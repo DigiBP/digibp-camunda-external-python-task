@@ -1,1 +1,1 @@
-worker: python SurpriseMenuClient.py
+web: gunicorn app:app
