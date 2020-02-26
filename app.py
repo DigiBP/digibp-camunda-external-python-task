@@ -3,6 +3,7 @@ import threading
 from surprise_menu_client import SurpriseMenuClient
 
 app = Flask(__name__)
+threading.Thread(target=SurpriseMenuClient).start()
 
 
 @app.route('/')
@@ -11,5 +12,4 @@ def welcome():
 
 
 if __name__ == '__main__':
-    threading.Thread(target=SurpriseMenuClient).start()
     app.run()
