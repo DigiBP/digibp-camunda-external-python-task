@@ -10,5 +10,5 @@ def welcome():
 
 
 if __name__ == '__main__':
-    subprocess.Popen('SurpriseMenuClient', shell=True)
+    subprocess.Popen('SurpriseMenuClient.js', shell=True)
     app.run()
