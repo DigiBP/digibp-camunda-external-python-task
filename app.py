@@ -1,5 +1,6 @@
 from flask import Flask
-import subprocess
+import threading
+from surprise_menu_client import SurpriseMenuClient
 
 app = Flask(__name__)
 
@@ -10,5 +11,5 @@ def welcome():
 
 
 if __name__ == '__main__':
-    subprocess.Popen('SurpriseMenuClient.js', shell=True)
+    t = threading.Thread(target=SurpriseMenuClient).start()
     app.run()
