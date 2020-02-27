@@ -15,8 +15,6 @@ class Client:
         self.threads = []
 
     def __fetch_and_lock(self, endpoint, task, callback=None, interval=300):
-        body = '[]'
-
         try:
             while True:
                 print("polling")
@@ -35,7 +33,6 @@ class Client:
             print("Engine is down")
 
     def subscribe(self, topic, callback=None, tenantId=None, lockDuration=20000, longPolling=29000):
-        # Define the endpoint for fetch and lock
         endpoint = str(self.url) + "/external-task/fetchAndLock"
 
         if tenantId:
