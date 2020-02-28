@@ -8,9 +8,9 @@ class SurpriseMenuClient:
         self.worker.subscribe("GetSurpriseMenu", self.get_surprise_menu_callback, "showcase")
         self.worker.polling()
 
-    def get_surprise_menu_callback(self, body):
+    def get_surprise_menu_callback(self, taskid, response):
         try:
-            vegetarian_guests = body[0]['variables']['vegetarianGuests']['value']
+            vegetarian_guests = response[0]['variables']['vegetarianGuests']['value']
         except:
             vegetarian_guests = False
 
@@ -20,7 +20,7 @@ class SurpriseMenuClient:
             menu = random.choice(["pizza", "pasta", "carne", "verdura"])
 
         variables = {"menu": menu}
-        self.worker.complete(body, **variables)
+        self.worker.complete(taskid, **variables)
 
 
 if __name__ == '__main__':
