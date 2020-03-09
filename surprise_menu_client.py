@@ -10,7 +10,7 @@ class SurpriseMenuClient:
 
     def get_surprise_menu_callback(self, taskid, response):
         try:
-            vegetarian_guests = response[0]['variables']['vegetarianGuests']['value']
+            vegetarian_guests = response[0]['variables']['vegetarian']['value']
         except:
             vegetarian_guests = False
 
