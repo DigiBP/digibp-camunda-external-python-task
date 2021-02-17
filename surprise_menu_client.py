@@ -4,7 +4,7 @@ import random
 
 class SurpriseMenuClient:
     def __init__(self):
-        self.worker = cam.Client("https://digibp.herokuapp.com/rest")
+        self.worker = cam.Client("https://digibp.herokuapp.com/engine-rest")
         self.worker.subscribe("GetSurpriseMenu", self.get_surprise_menu_callback, "showcase")
         self.worker.polling()
 
