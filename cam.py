@@ -13,6 +13,7 @@ class Client:
         else:
             self.workerid = str(uuid.uuid1())
         self.threads = []
+        self.stop_event = threading.Event()
 
     def __fetch_and_lock(self, endpoint, task, callback=None, interval=300):
         try:
@@ -54,17 +55,19 @@ class Client:
             return self.__fetch_and_lock(endpoint, task)
 
     def polling(self):
-        self.stop_event = threading.Event()
         try:
             for thread in self.threads:
-                if not thread.isAlive():
+                if not self.stop_event.isSet():
                     thread.start()
             for thread in self.threads:
                 if thread.isAlive():
                     thread.join()
+                if self.stop_event.isSet():
+                    self.threads = []
+                    self.stop_event.clear()
+                    print("stopped - you may need to subscribe again")
         except KeyboardInterrupt:
             self.stop_event.set()
-            self.threads = []
 
     # Complete Call
     def complete(self, taskid, **kwargs):
