@@ -17,7 +17,7 @@ class Client:
     def __fetch_and_lock(self, endpoint, task, callback=None, interval=300):
         try:
             while True:
-                print("polling")
+                print("polling subscription: " + task["topics"][0]["topicName"])
                 response = requests.post(endpoint, json=task)
                 print(response.status_code)
                 response = response.text
@@ -32,7 +32,7 @@ class Client:
                     time.sleep(interval / 1000)
 
         except:
-            print("Engine is down")
+            print("fail - subscription cancelled: " + task["topics"][0]["topicName"])
 
     def subscribe(self, topic, callback=None, tenantId=None, lockDuration=20000, longPolling=29000):
         endpoint = str(self.url) + "/external-task/fetchAndLock"
