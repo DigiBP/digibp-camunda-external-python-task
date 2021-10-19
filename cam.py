@@ -16,7 +16,7 @@ class Client:
 
     def __fetch_and_lock(self, endpoint, task, callback=None, interval=300):
         try:
-            while True:
+            while not self.stop_event.isSet():
                 print("polling subscription: " + task["topics"][0]["topicName"])
                 response = requests.post(endpoint, json=task)
                 print(response.status_code)
@@ -54,10 +54,17 @@ class Client:
             return self.__fetch_and_lock(endpoint, task)
 
     def polling(self):
-        for thread in self.threads:
-            thread.start()
-        for thread in self.threads:
-            thread.join()
+        self.stop_event = threading.Event()
+        try:
+            for thread in self.threads:
+                if not thread.isAlive():
+                    thread.start()
+            for thread in self.threads:
+                if thread.isAlive():
+                    thread.join()
+        except KeyboardInterrupt:
+            self.stop_event.set()
+            self.threads = []
 
     # Complete Call
     def complete(self, taskid, **kwargs):
