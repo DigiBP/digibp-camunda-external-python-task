@@ -69,7 +69,7 @@ class Client:
         except KeyboardInterrupt:
             self.stop_event.set()
 
-    # Complete Call
+    # Complete Command
     def complete(self, taskid, **kwargs):
         endpoint = str(self.url) + "/external-task/" + taskid + "/complete"
 
@@ -79,9 +79,10 @@ class Client:
             variable_new = {key: {"value": val}}
             variables_for_response.update(variable_new)
 
-        request = {"workerId": self.workerid,
-                    "variables": variables_for_response
-                    }
+        request = {
+            "workerId": self.workerid,
+            "variables": variables_for_response
+        }
 
         try:
             response = requests.post(endpoint, json=request)
@@ -92,8 +93,8 @@ class Client:
         except:
             print('fail')
 
-    # BPMN Error
-    def error(self, bpmn_error, taskid, error_message="not defined", **kwargs):
+    # BPMN Error Command
+    def error(self, taskid, error_code, error_message="not defined", **kwargs):
         endpoint = str(self.url) + "/external-task/" + taskid + "/bpmnError"
 
         variables_for_response = {}
@@ -103,7 +104,7 @@ class Client:
 
         request = {
             "workerId": self.workerid,
-            "errorCode": bpmn_error,
+            "errorCode": error_code,
             "errorMessage": error_message,
             "variables": variables_for_response
         }
@@ -115,15 +116,16 @@ class Client:
         except:
             print('fail')
 
-    # Create an incident
-    def fail(self, error_message, taskid, retries=0, retry_timeout=0):
+    # Failure Command
+    def failure(self, taskid, error_message="not defined", retries=0, retry_timeout=0):
         endpoint = str(self.url) + "/external-task/" + taskid + "/failure"
 
         request = {
             "workerId": self.workerid,
             "errorMessage": error_message,
             "retries": retries,
-            "retryTimeout": retry_timeout}
+            "retryTimeout": retry_timeout
+        }
 
         try:
             response = requests.post(endpoint, json=request)
@@ -132,8 +134,8 @@ class Client:
         except:
             print('fail')
 
-    # New Lockduration
-    def new_lockduration(self, new_duration, taskid):
+    # Extend Lock
+    def extend_lock(self, taskid, new_duration):
         endpoint = str(self.url) + "/external-task/" + taskid + "/extendLock"
 
         request = {
