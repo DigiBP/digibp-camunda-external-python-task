@@ -60,7 +60,7 @@ class Client:
                 if not self.stop_event.isSet():
                     thread.start()
             for thread in self.threads:
-                if thread.isAlive():
+                if thread.is_alive():
                     thread.join()
                 if self.stop_event.isSet():
                     self.threads = []
