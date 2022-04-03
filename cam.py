@@ -94,19 +94,13 @@ class Client:
             print('fail')
 
     # BPMN Error Command
-    def error(self, taskid, error_code, error_message="not defined", **kwargs):
+    def error(self, taskid, error_code, error_message="not defined"):
         endpoint = str(self.url) + "/external-task/" + taskid + "/bpmnError"
-
-        variables_for_response = {}
-        for key, val in kwargs.items():
-            variable_new = {key: {"value": val}}
-            variables_for_response.update(variable_new)
 
         request = {
             "workerId": self.workerid,
             "errorCode": error_code,
-            "errorMessage": error_message,
-            "variables": variables_for_response
+            "errorMessage": error_message
         }
 
         try:
