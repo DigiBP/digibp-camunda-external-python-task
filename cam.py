@@ -26,12 +26,11 @@ class Client:
                     response_data = json.loads(response_text)
                     taskid = str(response_data[0]['id'])
                     
-                    # Log task ID and variables pulled
                     task_variables = response_data[0].get('variables', {})
                     logging.info(f"Task fetched with ID: {taskid} and data: {task_variables}")
                     
                     if callback:
-                        callback(taskid, response_data)
+                        callback(taskid, response_data, self)
                     else:
                         return response_data
                 else:
