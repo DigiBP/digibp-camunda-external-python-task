@@ -3,51 +3,57 @@ import json
 import time
 import threading
 import uuid
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
 class Client:
     def __init__(self, url, workerid=None):
         self.url = url
-        if workerid:
-            self.workerid = str(workerid)
-        else:
-            self.workerid = str(uuid.uuid1())
+        self.workerid = str(workerid) if workerid else str(uuid.uuid1())
         self.threads = []
         self.stop_event = threading.Event()
 
     def __fetch_and_lock(self, endpoint, task, callback=None, interval=300):
         try:
-            while not self.stop_event.isSet():
-                print("polling subscription: " + task["topics"][0]["topicName"])
+            while not self.stop_event.is_set():
+                logging.info(f"Polling subscription: {task['topics'][0]['topicName']}")
                 response = requests.post(endpoint, json=task)
-                print(response.status_code)
-                response = response.text
-                if response != '[]':
-                    response = json.loads(response)
-                    taskid = str(response[0]['id'])
+                logging.info(f"Response status: {response.status_code}")
+                
+                response_text = response.text
+                if response_text != '[]':
+                    response_data = json.loads(response_text)
+                    taskid = str(response_data[0]['id'])
+                    
+                    # Log task ID and variables pulled
+                    task_variables = response_data[0].get('variables', {})
+                    logging.info(f"Task fetched with ID: {taskid} and data: {task_variables}")
+                    
                     if callback:
-                        callback(taskid, response)
+                        callback(taskid, response_data)
                     else:
-                        return response
+                        return response_data
                 else:
                     time.sleep(interval / 1000)
 
-        except:
-            print("fail - subscription cancelled: " + task["topics"][0]["topicName"])
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed for subscription: {task['topics'][0]['topicName']}, error: {e}")
 
     def subscribe(self, topic, callback=None, tenantId=None, lockDuration=20000, longPolling=29000):
-        endpoint = str(self.url) + "/external-task/fetchAndLock"
-
-        task = {"workerId": self.workerid,
-                "maxTasks": 1,
-                "usePriority": "true",
-                "asyncResponseTimeout": longPolling,
-                "topics":
-                    [{"topicName": topic,
-                        "lockDuration": lockDuration,
-                        "tenantIdIn" if tenantId else None: [tenantId]
-                        }]
-                }
+        endpoint = f"{self.url}/external-task/fetchAndLock"
+        task = {
+            "workerId": self.workerid,
+            "maxTasks": 1,
+            "usePriority": "true",
+            "asyncResponseTimeout": longPolling,
+            "topics": [{
+                "topicName": topic,
+                "lockDuration": lockDuration,
+            }]
+        }
+        if tenantId:
+            task['topics'][0]['tenantIdIn'] = [tenantId]
 
         if callback:
             self.threads.append(threading.Thread(target=self.__fetch_and_lock, args=(endpoint, task, callback,)))
@@ -57,27 +63,21 @@ class Client:
     def polling(self):
         try:
             for thread in self.threads:
-                if not self.stop_event.isSet():
+                if not self.stop_event.is_set():
                     thread.start()
             for thread in self.threads:
                 if thread.is_alive():
                     thread.join()
-                if self.stop_event.isSet():
+                if self.stop_event.is_set():
                     self.threads = []
                     self.stop_event.clear()
-                    print("stopped - you may need to subscribe again")
+                    logging.info("Stopped - you may need to subscribe again")
         except KeyboardInterrupt:
             self.stop_event.set()
 
-    # Complete Command
     def complete(self, taskid, **kwargs):
-        endpoint = str(self.url) + "/external-task/" + taskid + "/complete"
-
-        # puts the variables from the dictonary into the nested format for the json response
-        variables_for_response = {}
-        for key, val in kwargs.items():
-            variable_new = {key: {"value": val}}
-            variables_for_response.update(variable_new)
+        endpoint = f"{self.url}/external-task/{taskid}/complete"
+        variables_for_response = {key: {"value": val} for key, val in kwargs.items()}
 
         request = {
             "workerId": self.workerid,
@@ -86,22 +86,16 @@ class Client:
 
         try:
             response = requests.post(endpoint, json=request)
-            body_complete = response.text
-            print(body_complete)
-            print(response.status_code)
+            if response.status_code == 204:
+                logging.info(f"Task {taskid} completed successfully with data: {request}")
+            else:
+                logging.info(f"Response: {response.text}, Status code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
 
-        except:
-            print('fail')
-
-    # BPMN Error Command
     def error(self, taskid, error_code, error_message="not defined", **kwargs):
-        endpoint = str(self.url) + "/external-task/" + taskid + "/bpmnError"
-        
-        # puts the variables from the dictonary into the nested format for the json response
-        variables_for_response = {}
-        for key, val in kwargs.items():
-            variable_new = {key: {"value": val}}
-            variables_for_response.update(variable_new)
+        endpoint = f"{self.url}/external-task/{taskid}/bpmnError"
+        variables_for_response = {key: {"value": val} for key, val in kwargs.items()}
 
         request = {
             "workerId": self.workerid,
@@ -112,17 +106,12 @@ class Client:
 
         try:
             response = requests.post(endpoint, json=request)
-            body_complete = response.text
-            print(body_complete)
-            print(response.status_code)
+            logging.info(f"Error response: {response.text}, Status code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
 
-        except:
-            print('fail')
-
-    # Failure Command
     def failure(self, taskid, error_message="not defined", retries=0, retry_timeout=0):
-        endpoint = str(self.url) + "/external-task/" + taskid + "/failure"
-
+        endpoint = f"{self.url}/external-task/{taskid}/failure"
         request = {
             "workerId": self.workerid,
             "errorMessage": error_message,
@@ -132,15 +121,12 @@ class Client:
 
         try:
             response = requests.post(endpoint, json=request)
-            print(response.status_code)
+            logging.info(f"Failure response: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
 
-        except:
-            print('fail')
-
-    # Extend Lock
     def extend_lock(self, taskid, new_duration):
-        endpoint = str(self.url) + "/external-task/" + taskid + "/extendLock"
-
+        endpoint = f"{self.url}/external-task/{taskid}/extendLock"
         request = {
             "workerId": self.workerid,
             "newDuration": new_duration
@@ -148,7 +134,6 @@ class Client:
 
         try:
             response = requests.post(endpoint, json=request)
-            print(response.status_code)
-            print(self.workerid)
-        except:
-            print('fail')
+            logging.info(f"Extended lock for task {taskid} with response: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request failed: {e}")
