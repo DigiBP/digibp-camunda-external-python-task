@@ -30,7 +30,16 @@ class Client:
                     logging.info(f"Task fetched with ID: {taskid} and data: {task_variables}")
                     
                     if callback:
-                        callback(taskid, response_data, self)
+                        try:
+                            callback(taskid, response_data, self)
+                        except TypeError as e:
+                            try:
+                                callback(taskid, response_data)
+                            except TypeError:
+                                raise TypeError(
+                                    f"The callback function must accept at least 2 parameters (taskid, response_data) and optionally a 3rd parameter (worker). "
+                                    f"Original error: {e}"
+                                )
                     else:
                         return response_data
                 else:
